@@ -1,34 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-//
-import './home.dart';
+import 'package:google_maps_webservice/places.dart';
+import 'package:lifeshare/pages/tabs.dart';
+import 'responsive_ui.dart';
 
 class RequestBlood extends StatefulWidget {
-  double _lat, _lng;
-  RequestBlood(this._lat, this._lng);
   @override
   _RequestBloodState createState() => _RequestBloodState();
 }
-
 class _RequestBloodState extends State<RequestBlood> {
   final formkey = new GlobalKey<FormState>();
   List<String> _bloodGroup = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
   String _selected = '';
+  Position position;
+  String _name;
   String _qty;
   String _phone;
   String _address;
+  String _adress;
   bool _categorySelected = false;
   DateTime selectedDate = DateTime.now();
   var formattedDate;
   int flag = 0;
+
   FirebaseUser currentUser;
   List<Placemark> placemark;
   @override
   void initState() {
     super.initState();
+    getCurrentLocation();
     _loadCurrentUser();
     getAddress();
   }
@@ -55,6 +59,17 @@ class _RequestBloodState extends State<RequestBlood> {
     }
   }
 
+  void getCurrentLocation() async {
+    Position res = await Geolocator().getCurrentPosition();
+    print(Position);
+    setState(() {
+      position = res;
+    });
+
+    print(position.latitude);
+    print(position.longitude);
+  }
+
   Future<void> _loadCurrentUser() async {
     await FirebaseAuth.instance.currentUser().then((FirebaseUser user) {
       setState(() {
@@ -69,7 +84,22 @@ class _RequestBloodState extends State<RequestBlood> {
         context: context,
         initialDate: selectedDate,
         firstDate: selectedDate,
-        lastDate: DateTime(2022));
+        lastDate: DateTime(2022),
+      builder: (BuildContext context, Widget child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: const Color(0xFF000000),
+            accentColor: const Color(0xFF000000),
+            colorScheme: ColorScheme.light(primary: const Color(0xFF000000)),
+            buttonTheme: ButtonThemeData(
+                textTheme: ButtonTextTheme.primary
+            ),
+          ),
+          child: child,
+        );
+      },
+
+    );
     if (picked != null && picked != selectedDate)
       setState(() {
         selectedDate = picked;
@@ -77,6 +107,7 @@ class _RequestBloodState extends State<RequestBlood> {
       });
     var date = DateTime.parse(selectedDate.toString());
     formattedDate = "${date.day}-${date.month}-${date.year}";
+
   }
 
   Future<bool> dialogTrigger(BuildContext context) async {
@@ -93,11 +124,11 @@ class _RequestBloodState extends State<RequestBlood> {
                   formkey.currentState.reset();
                   Navigator.pop(context);
                   Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => HomePage()));
+                      MaterialPageRoute(builder: (context) => Tabs()));
                 },
                 child: Icon(
                   Icons.arrow_forward,
-                  color: Color.fromARGB(1000, 221, 46, 68),
+                  color: Colors.black,
                 ),
               ),
             ],
@@ -107,7 +138,7 @@ class _RequestBloodState extends State<RequestBlood> {
 
   void getAddress() async {
     placemark =
-        await Geolocator().placemarkFromCoordinates(widget._lat, widget._lng);
+    await Geolocator().placemarkFromCoordinates(position.latitude, position.longitude);
     _address = placemark[0].name.toString() +
         "," +
         placemark[0].locality.toString() +
@@ -115,34 +146,43 @@ class _RequestBloodState extends State<RequestBlood> {
         placemark[0].postalCode.toString();
   }
 
+  bool checkBoxValue = false;
+  double _height;
+  double _width;
+  double _pixelRatio;
+  bool _large;
+  bool _medium;
+
   @override
   Widget build(BuildContext context) {
+    _height = MediaQuery.of(context).size.height;
+    _width = MediaQuery.of(context).size.width;
+    _pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    _large =  ResponsiveWidget.isScreenLarge(_width, _pixelRatio);
+    _medium =  ResponsiveWidget.isScreenMedium(_width, _pixelRatio);
+
     return Scaffold(
-      backgroundColor: Color.fromARGB(1000, 221, 46, 68),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0.0,
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         title: Text(
           "Request Blood",
           style: TextStyle(
-            fontSize: 50.0,
-            fontFamily: "SouthernAire",
+            fontSize: 30.0,
             color: Colors.white,
           ),
         ),
-         leading: IconButton(
+        leading: IconButton(
           icon: Icon(
-            FontAwesomeIcons.reply,
+           Icons.arrow_back_ios,
             color: Colors.white,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: ClipRRect(
-        borderRadius: new BorderRadius.only(
-            topLeft: const Radius.circular(40.0),
-            topRight: const Radius.circular(40.0)),
         child: Container(
           height: 800.0,
           width: double.infinity,
@@ -159,12 +199,12 @@ class _RequestBloodState extends State<RequestBlood> {
                         child: Column(
                           children: <Widget>[
                             Container(
-                              padding: EdgeInsets.only(top: 20.0),
+                              padding: EdgeInsets.all(8.0),
                               child: DropdownButton(
                                 hint: Text(
                                   'Please choose a Blood Group',
                                   style: TextStyle(
-                                    color: Color.fromARGB(1000, 221, 46, 68),
+                                    color: Colors.black,
                                   ),
                                 ),
                                 iconSize: 40.0,
@@ -190,20 +230,44 @@ class _RequestBloodState extends State<RequestBlood> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20.0,
-                                color: Color.fromARGB(1000, 221, 46, 68),
+                                color: Colors.black,
                               ),
                             ),
                           ],
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(18.0),
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: 'Name',
+                            icon: Icon(
+                              FontAwesomeIcons.user,
+                              color: Colors.black,size: 15,
+                            ),
+                          ),
+                          validator: (value){
+                            String pattern = r'(^[a-zA-Z ]*$)';
+                            RegExp regExp = new RegExp(pattern);
+                            if (value.length == 0) {
+                              return "Name is Required";
+                            } else if (!regExp.hasMatch(value)) {
+                              return "Name must be a-z and A-Z";
+                            }
+                            return null;
+                          },
+                          maxLength: 26,
+                          onSaved: (value) => _name = value,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: TextFormField(
                           decoration: InputDecoration(
                             hintText: 'Quantity(L)',
                             icon: Icon(
                               FontAwesomeIcons.prescriptionBottle,
-                              color: Color.fromARGB(1000, 221, 46, 68),
+                              color: Colors.black,size: 15,
                             ),
                           ),
                           validator: (value) => value.isEmpty
@@ -220,26 +284,26 @@ class _RequestBloodState extends State<RequestBlood> {
                             IconButton(
                               onPressed: () => _selectDate(context),
                               icon: Icon(FontAwesomeIcons.calendar),
-                              color: Color.fromARGB(1000, 221, 46, 68),
+                              color: Colors.black,iconSize: 15,
                             ),
                             flag == 0
                                 ? Text(
-                                    "<< Pick up a Due Date",
-                                    style: TextStyle(
-                                        color: Colors.black54, fontSize: 15.0),
-                                  )
+                              "<< Pick up a Due Date",
+                              style: TextStyle(
+                                  color: Colors.black54, fontSize: 15.0),
+                            )
                                 : Text(formattedDate),
                           ],
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(18.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: TextFormField(
                           decoration: InputDecoration(
                             hintText: 'Phone Number',
                             icon: Icon(
                               FontAwesomeIcons.mobile,
-                              color: Color.fromARGB(1000, 221, 46, 68),
+                              color: Colors.black,size: 15,
                             ),
                           ),
                           validator: (value) => value.isEmpty
@@ -250,21 +314,45 @@ class _RequestBloodState extends State<RequestBlood> {
                           keyboardType: TextInputType.number,
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: 'Address',
+                            icon: Icon(
+                              FontAwesomeIcons.addressCard,
+                              color: Colors.black,size: 15,
+                            ),
+                          ),
+                          validator: (value){
+                            if (value.length == 0) {
+                              return "Adress is Required";
+                            }
+                            return null;
+                          },
+                          maxLength: 120,
+                          onSaved: (value) => _adress = value,
+                        ),
+                      ),
                       SizedBox(
                         height: 30.0,
                       ),
                       RaisedButton(
-                        onPressed: () {
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+                        onPressed: () async {
                           if (!formkey.currentState.validate()) return;
                           formkey.currentState.save();
                           final Map<String, dynamic> BloodRequestDetails = {
                             'uid': currentUser.uid,
+                            'Name': _name,
                             'bloodGroup': _selected,
                             'quantity': _qty,
                             'dueDate': formattedDate,
+                            'date': selectedDate,
                             'phone': _phone,
-                            'location': new GeoPoint(widget._lat, widget._lng),
-                            'address': _address,
+                            'location': new GeoPoint(position.latitude, position.longitude),
+                            'address': _adress,
                           };
                           addData(BloodRequestDetails).then((result) {
                             dialogTrigger(context);
@@ -273,11 +361,19 @@ class _RequestBloodState extends State<RequestBlood> {
                           });
                         },
                         textColor: Colors.white,
-                        padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                        color: Color.fromARGB(1000, 221, 46, 68),
-                        child: Text("SUBMIT"),
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(30.0)),
+                        padding: EdgeInsets.all(0.0),
+                        child: Container(
+                          alignment: Alignment.center,
+                          width:_large? _width/4 : (_medium? _width/3.75: _width/3.5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                            gradient: LinearGradient(
+                              colors: <Color>[Colors.black, Colors.black54],
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text('SUBMIT', style: TextStyle(fontSize: _large? 14: (_medium? 12: 10)),),
+                        ),
                       ),
                     ],
                   ),
@@ -289,4 +385,5 @@ class _RequestBloodState extends State<RequestBlood> {
       ),
     );
   }
+
 }

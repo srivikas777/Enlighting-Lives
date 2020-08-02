@@ -16,12 +16,12 @@ class RippleIndicator extends StatelessWidget {
                 padding: EdgeInsets.all(2.0),
                 child: Center(
                     child: SpinKitRipple(
-                  color: Color.fromARGB(1000, 221, 46, 68),
+                  color: Colors.black,
                 )),
               ),
               SizedBox(width: 10.0),
               Text(
-                message,
+                message, style: TextStyle(color:Colors.black),
               ),
             ],
           )),

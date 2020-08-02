@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-//
+import 'package:lifeshare/pages/DonorsFilter.dart';
+import 'package:lifeshare/pages/tabs.dart';
 import 'package:lifeshare/utils/customWaveIndicator.dart';
+import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class DonorsPage extends StatefulWidget {
   @override
@@ -10,8 +12,12 @@ class DonorsPage extends StatefulWidget {
 }
 
 class _DonorsPageState extends State<DonorsPage> {
+  final primary = Colors.black;
+  final secondary = Colors.black;
   List<String> donors = [];
   List<String> bloodgroup = [];
+  List<String> email = [];
+  List<int> mobile = [];
   Widget _child;
 
   @override
@@ -28,8 +34,12 @@ class _DonorsPageState extends State<DonorsPage> {
         .then((docs) {
       if (docs.documents.isNotEmpty) {
         for (int i = 0; i < docs.documents.length; ++i) {
-          donors.add(docs.documents[i].data['name']);
-          bloodgroup.add(docs.documents[i].data['bloodgroup']);
+         if(docs.documents[i].data['Volunteer']==true){
+           donors.add(docs.documents[i].data['name']);
+           bloodgroup.add(docs.documents[i].data['bloodgroup']);
+           email.add(docs.documents[i].data['email']);
+           mobile.add(docs.documents[i].data['mobile']);
+         }
         }
       }
     });
@@ -40,71 +50,176 @@ class _DonorsPageState extends State<DonorsPage> {
 
   Widget myWidget() {
     return Scaffold(
-      backgroundColor: Color.fromARGB(1000, 221, 46, 68),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0.0,
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         title: Text(
           "Donors",
           style: TextStyle(
-            fontSize: 50.0,
-            fontFamily: "SouthernAire",
+            fontSize: 30.0,
             color: Colors.white,
           ),
         ),
          leading: IconButton(
           icon: Icon(
-            FontAwesomeIcons.reply,
+            Icons.arrow_back_ios,
             color: Colors.white,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        Tabs()));
+          },
         ),
-      ),
-      body: ClipRRect(
-        borderRadius: new BorderRadius.only(
-            topLeft: const Radius.circular(40.0),
-            topRight: const Radius.circular(40.0)),
-        child: Container(
-          height: 800.0,
-          width: double.infinity,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView.builder(
-              itemCount: donors.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Text(donors[index]),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: Icon(Icons.message),
-                          onPressed: () {},
-                          color: Color.fromARGB(1000, 221, 46, 68),
-                        ),
-                      ),
-                    ],
-                  ),
-                  leading: CircleAvatar(
-                    child: Text(
-                      bloodgroup[index],
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: Color.fromARGB(1000, 221, 46, 68),
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.phone),
-                    onPressed: () {},
-                    color: Color.fromARGB(1000, 221, 46, 68),
-                  ),
-                );
-              },
+        actions: <Widget>[
+           PopupMenuButton<String>(
+            itemBuilder: (context) =>[
+            PopupMenuItem(
+              value: "A+",
+              child: Text("A+"),
             ),
+            PopupMenuItem(
+              value: "A-",
+              child: Text("A-"),
+            ),
+              PopupMenuItem(
+                value: "B+",
+                child: Text("B+"),
+              ),
+              PopupMenuItem(
+                value: "B-",
+                child: Text("B-"),
+              ),
+              PopupMenuItem(
+                value: "O+",
+                child: Text("O+"),
+              ),
+              PopupMenuItem(
+                value: "O-",
+                child: Text("O-"),
+              ),
+              PopupMenuItem(
+                value: "AB+",
+                child: Text("AB+"),
+              ),
+              PopupMenuItem(
+                value: "AB-",
+                child: Text("AB-"),
+              ),
+
+            ],
+             onSelected: (value) {
+               Navigator.push(
+                   context,
+                   MaterialPageRoute(
+                       builder: (context) =>
+                           DonorsFilter(value)));
+             },
+             icon: Icon(Icons.list),
+        )
+        ],
+      ),
+      body:
+          SafeArea(
+            child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: donors.length,
+            itemBuilder: (BuildContext context, int index) {
+              return buildList(context, index);
+            }),
           ),
+    );
+  }
+
+  Widget buildList(BuildContext context, int index) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        color: Colors.black12,
+      ),
+      width: double.infinity,
+      height: 110,
+      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+      child: ListTile(
+        title:SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      donors[index],
+                      style: TextStyle(
+                          color: primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                    SizedBox(
+                      height: 6,
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.contact_mail,
+                          color: secondary,
+                          size: 20,
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Text(email[index],
+                            style: TextStyle(
+                                color: primary, fontSize: 13, letterSpacing: .3)),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 6,
+                    ),
+
+                    Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.contact_phone,
+                          color: secondary,
+                          size: 20,
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Text(mobile[index].toString(),
+                            style: TextStyle(
+                                color: primary, fontSize: 13, letterSpacing: .3)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        leading: CircleAvatar(
+          radius:30 ,
+          child: Text(
+            bloodgroup[index],
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+        ),
+        trailing:  IconButton(
+          icon: Icon(Icons.phone),
+          onPressed: () {
+            UrlLauncher.launch("tel:${mobile[index]}");
+          },
+          color: Colors.black,
         ),
       ),
     );

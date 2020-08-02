@@ -35,7 +35,7 @@ class CustomDialogs {
                   children: <Widget>[
                     Padding(
                         padding: EdgeInsets.all(2.0),
-                        child: CircularProgressIndicator()),
+                        child: CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.black),)),
                     SizedBox(width: 10.0),
                     Text(
                       message,

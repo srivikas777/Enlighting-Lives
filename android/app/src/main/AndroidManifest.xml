@@ -11,10 +11,10 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="lifeshare"
-        android:icon="@mipmap/ic_launcher">
+        android:label="ENLIGHTENING LIVES"
+        android:icon="@mipmap/launcher_icon">
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDzSvMXoweTezf51RINyMwtbiyOVTdqoiI"/>
+            android:value="AIzaSyCy1XYpTepcq2QdeFuIDI2GrGYGFzrcWYE"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

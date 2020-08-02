@@ -1,6 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lifeshare/pages/eventdetails.dart';
+import 'package:lifeshare/pages/tabs.dart';
+import 'package:lifeshare/utils/customWaveIndicator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,13 +23,38 @@ class CampaignsPage extends StatefulWidget {
 class _CampaignsPageState extends State<CampaignsPage> {
   FirebaseUser currentUser;
   final formkey = new GlobalKey<FormState>();
-  String _text, _name;
+  String _text, _name,_date;
+  List<String> names = [];
+  List<String> _url = [];
+  List<String> date = [];
+  List<String> content = [];
+  Widget _child;
   @override
   void initState() {
+    _child = WaveIndicator();
+    getDonors();
     super.initState();
     _loadCurrentUser();
   }
 
+  Future<Null> getDonors() async {
+    await Firestore.instance
+        .collection('Campaign Details')
+        .getDocuments()
+        .then((docs) {
+      if (docs.documents.isNotEmpty) {
+        for (int i = 0; i < docs.documents.length; ++i) {
+          names.add(docs.documents[i].data['name']);
+          _url.add(docs.documents[i].data['image']);
+          date.add(docs.documents[i].data['date']);
+          content.add(docs.documents[i].data['content']);
+        }
+      }
+    });
+    setState(() {
+      _child = myWidget();
+    });
+  }
   bool isLoggedIn() {
     if (FirebaseAuth.instance.currentUser() != null) {
       return true;
@@ -75,13 +104,41 @@ class _CampaignsPageState extends State<CampaignsPage> {
                 },
                 child: Icon(
                   Icons.arrow_forward,
-                  color: Color.fromARGB(1000, 221, 46, 68),
+                  color: Colors.black,
                 ),
               ),
             ],
           );
         });
   }
+
+  Future<bool> deleteTrigger(BuildContext context) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Success'),
+            content: Text('Post Deleted'),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              CampaignsPage()));
+                },
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
  File _image;
   String _path;
 
@@ -101,73 +158,78 @@ class _CampaignsPageState extends State<CampaignsPage> {
     });
   }
 
-  Future<String> uploadImage() async {
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    StorageReference storageReference = FirebaseStorage.instance
-        .ref()
-        .child('campaignposters/${user.uid}/$_name.jpg');
-    StorageUploadTask uploadTask = storageReference.putFile(_image);
-
-    StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
-
-    String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-    return downloadUrl;
+  Future<Null> Delete(int index) async {
+    await Firestore.instance
+        .collection('Campaign Details')
+        .getDocuments()
+        .then((docs) async{
+      await Firestore.instance.runTransaction((Transaction myTransaction) async {
+        await myTransaction.delete(docs.documents[index].reference).then((result) {
+          deleteTrigger(context);
+        }).catchError((e) {
+          print(e);
+        });;
+      });
+    });
+    setState(() {
+      _child = myWidget();
+    });
   }
-  @override
-  Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent, //top bar color
-      systemNavigationBarColor: Colors.black, //bottom bar color
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
+
+  Future<String> uploadImage() async {
+    if (_image != null) {
+      FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      StorageReference storageReference = FirebaseStorage.instance
+          .ref()
+          .child('Eventposters/${user.uid}/$_name.jpg');
+      StorageUploadTask uploadTask = storageReference.putFile(_image);
+
+      StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      return downloadUrl;
+    }
+    else{
+      return'https://firebasestorage.googleapis.com/v0/b/chec-f7248.appspot.com/o/Eventposters%2FUc6caisF0FMGy7kJIc2FNXMbcBx1%2FDonation.jpg?alt=media&token=0a3dfe15-1463-412b-bbc6-37472dd37208';
+    }
+  }
+  Widget myWidget(){
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Color.fromARGB(1000, 221, 46, 68),
+      backgroundColor: Color(0xffF3F3F3),
       appBar: AppBar(
         elevation: 0.0,
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         title: Text(
           "Campaigns",
           style: TextStyle(
-            fontSize: 60.0,
-            fontFamily: "SouthernAire",
+            fontSize: 30.0,
             color: Colors.white,
           ),
         ),
         leading: IconButton(
           icon: Icon(
-            FontAwesomeIcons.reply,
+            Icons.arrow_back_ios,
             color: Colors.white,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        Tabs()));
+          },
         ),
-      ),
-      body: ClipRRect(
-        borderRadius: new BorderRadius.only(
-            topLeft: const Radius.circular(40.0),
-            topRight: const Radius.circular(40.0)),
-        child: Container(
-          height: 800.0,
-          width: double.infinity,
-          color: Colors.white,
-        ),
-      ),
-      floatingActionButton: Align(
-        alignment: Alignment.bottomRight,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: FloatingActionButton(
-            backgroundColor: Color.fromARGB(1000, 221, 46, 68),
-            child: Icon(
-              FontAwesomeIcons.pen,
-              color: Colors.white,
-            ),
+        actions: <Widget>[
+          FlatButton(
+            textColor: Colors.white,
+            child: Text("Add New"),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: Text("Make a post about your campaign"),
+                  title: Text("Event Details"),
                   content: Form(
                     key: formkey,
                     child: SingleChildScrollView(
@@ -178,10 +240,10 @@ class _CampaignsPageState extends State<CampaignsPage> {
                             padding: const EdgeInsets.all(5.0),
                             child: TextFormField(
                               decoration: InputDecoration(
-                                hintText: 'Organisation name',
+                                hintText: 'Event name',
                                 icon: Icon(
                                   FontAwesomeIcons.user,
-                                  color: Color.fromARGB(1000, 221, 46, 68),
+                                  color: Colors.black,
                                 ),
                               ),
                               validator: (value) => value.isEmpty
@@ -195,10 +257,10 @@ class _CampaignsPageState extends State<CampaignsPage> {
                             padding: const EdgeInsets.all(5.0),
                             child: TextFormField(
                               decoration: InputDecoration(
-                                hintText: 'Wite something here',
+                                hintText: 'Description',
                                 icon: Icon(
                                   FontAwesomeIcons.pen,
-                                  color: Color.fromARGB(1000, 221, 46, 68),
+                                  color: Colors.black,
                                 ),
                               ),
                               validator: (value) => value.isEmpty
@@ -206,30 +268,46 @@ class _CampaignsPageState extends State<CampaignsPage> {
                                   : null,
                               onSaved: (value) => _text = value,
                               keyboardType: TextInputType.multiline,
-                              maxLength: 120,
                             ),
                           ),
-                         Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        IconButton(
-                            icon: Icon(Icons.camera_alt),
-                            onPressed: () {
-                              getImage(true);
-                            }),
-                        IconButton(
-                            icon: Icon(Icons.filter),
-                            onPressed: () {
-                              getImage(false);
-                            }),
-                      ],
-                    ),
-                    _image == null
-                        ? Container()
-                        : Image.file(
+                          Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                hintText: 'Date & time: 24/05/2020, 10:30 AM',
+                                icon: Icon(
+                                  FontAwesomeIcons.calendar,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              validator: (value) => value.isEmpty
+                                  ? "This field can't be empty"
+                                  : null,
+                              onSaved: (value) => _date = value,
+                              keyboardType: TextInputType.multiline,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              IconButton(
+                                  icon: Icon(Icons.camera_alt),
+                                  onPressed: () {
+                                    getImage(true);
+                                  }),
+                              IconButton(
+                                  icon: Icon(Icons.filter),
+                                  onPressed: () {
+                                    getImage(false);
+                                  }),
+                            ],
+                          ),
+                          _image == null
+                              ? Container()
+                              : Image.file(
                             _image,
                             height: 150.0,
-                            width: 150.0,
+                            width: 300.0,
                           ),
                         ],
                       ),
@@ -237,11 +315,11 @@ class _CampaignsPageState extends State<CampaignsPage> {
                   ),
                   actions: <Widget>[
                     RaisedButton(
-                      color: Color.fromARGB(1000, 221, 46, 68),
+                      color: Colors.black,
                       onPressed: ()async {
                         if (!formkey.currentState.validate()) return;
                         formkey.currentState.save();
-                         CustomDialogs.progressDialog(
+                        CustomDialogs.progressDialog(
                             context: context, message: 'Uploading');
                         var url = await uploadImage();
                         Navigator.of(context).pop();
@@ -250,6 +328,7 @@ class _CampaignsPageState extends State<CampaignsPage> {
                           'content': _text,
                           'image': url,
                           'name': _name,
+                          'date':_date,
                         };
                         addData(campaignDetails).then((result) {
                           dialogTrigger(context);
@@ -266,9 +345,98 @@ class _CampaignsPageState extends State<CampaignsPage> {
                 ),
               );
             },
-          ),
-        ),
+          )
+        ],
+      ),
+      body: SafeArea(
+        child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: names.length,
+            itemBuilder: (BuildContext context, int index) {
+              return buildList(context, index);
+            }),
       ),
     );
+  }
+
+  Widget buildList(BuildContext context, int index) {
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 4.0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Stack(
+              children: <Widget>[
+                Column(
+                  children: <Widget>[
+                    GestureDetector(
+                      child: Container(
+                        height: 200.0,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10.0),
+                              topRight: Radius.circular(10.0),
+                            ),
+                            image: DecorationImage(
+                              image: CachedNetworkImageProvider(_url[index]),
+                              fit: BoxFit.cover,
+                            )),
+                      ),
+                      onTap: (){
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>  Details(names[index], _url[index], date[index], content[index])));
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        names[index],style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: <Widget>[
+                          Text(
+                            date[index],
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14.0,
+                            ),
+                          ),
+                          Spacer(),
+                          IconButton(
+                            iconSize: 20,
+                            icon: Icon(Icons.delete),
+                            onPressed: () {Delete(index);
+                            },
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  @override
+  Widget build(BuildContext context) {
+    return _child;
   }
 }

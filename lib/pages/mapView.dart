@@ -74,7 +74,7 @@ class _MapViewState extends State<MapView> {
     final Marker marker = Marker(
         markerId: markerId,
         position:
-            LatLng(request['location'].latitude, request['location'].longitude),
+        LatLng(request['location'].latitude, request['location'].longitude),
         onTap: () async {
           CustomDialogs.progressDialog(context: context, message: 'Fetching');
           await _fetchrequestName(requestId);
@@ -87,7 +87,7 @@ class _MapViewState extends State<MapView> {
                   margin: const EdgeInsets.all(8.0),
                   height: 180.0,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.black,
                     borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
                   child: Column(
@@ -99,16 +99,15 @@ class _MapViewState extends State<MapView> {
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: CircleAvatar(
+                              backgroundColor:Colors.white ,
                               child: Text(
                                 request['bloodGroup'],
                                 style: TextStyle(
                                   fontSize: 30.0,
-                                  color: Colors.white,
+                                  color: Colors.black,
                                 ),
                               ),
                               radius: 30.0,
-                              backgroundColor:
-                                  Color.fromARGB(1000, 221, 46, 68),
                             ),
                           ),
                           Column(
@@ -117,12 +116,12 @@ class _MapViewState extends State<MapView> {
                               Text(
                                 _name,
                                 style: TextStyle(
-                                    fontSize: 18.0, color: Colors.black87),
+                                    fontSize: 18.0, color: Colors.white),
                               ),
                               Text(
                                 "Quantity: " + request['quantity'] + " L",
                                 style: TextStyle(
-                                    fontSize: 14.0, color: Colors.black87),
+                                    fontSize: 14.0, color: Colors.white),
                               ),
                               Text(
                                 "Due Date: " + request['dueDate'],
@@ -136,7 +135,7 @@ class _MapViewState extends State<MapView> {
                       Padding(
                         padding: const EdgeInsets.only(left:12.0,right: 12.0),
                         child: Text(
-                          request['address'],
+                          request['address'],style: TextStyle(color: Colors.white),
                         ),
                       ),
                       Row(
@@ -146,9 +145,9 @@ class _MapViewState extends State<MapView> {
                             onPressed: () {
                               UrlLauncher.launch("tel:${request['phone']}");
                             },
-                            textColor: Colors.white,
+                            textColor: Colors.black,
                             padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                            color: Color.fromARGB(1000, 221, 46, 68),
+                            color: Colors.white,
                             child: Icon(Icons.phone),
                             shape: new RoundedRectangleBorder(
                                 borderRadius: new BorderRadius.circular(30.0)),
@@ -158,9 +157,9 @@ class _MapViewState extends State<MapView> {
                               String message="Hello $_name, I am a potential blood donor willing to help you. Reply back if you still need blood.";
                               UrlLauncher.launch("sms:${request['phone']}?body=$message");
                             },
-                            textColor: Colors.white,
+                            textColor: Colors.black,
                             padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                            color: Color.fromARGB(1000, 221, 46, 68),
+                            color: Colors.white,
                             child: Icon(Icons.message),
                             shape: new RoundedRectangleBorder(
                                 borderRadius: new BorderRadius.circular(30.0)),
@@ -237,6 +236,8 @@ class _MapViewState extends State<MapView> {
       children: <Widget>[
         GoogleMap(
           mapType: MapType.normal,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
           initialCameraPosition: CameraPosition(
             target: LatLng(position.latitude, position.longitude),
             zoom: 18.0,
@@ -253,19 +254,18 @@ class _MapViewState extends State<MapView> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: FloatingActionButton.extended(
-              backgroundColor: Color.fromARGB(1000, 221, 46, 68),
+              backgroundColor: Colors.black,
               onPressed: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => RequestBlood(
-                            position.latitude, position.longitude)));
+                        builder: (context) => RequestBlood( )));
               },
-              icon: Icon(FontAwesomeIcons.burn),
+              icon: Icon(FontAwesomeIcons.heartbeat),
               label: Text("Request Blood"),
             ),
           ),
-        )
+        ),//
       ],
     );
   }

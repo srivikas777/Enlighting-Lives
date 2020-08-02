@@ -5,7 +5,7 @@ class WaveIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-      child: SpinKitWave(color: Color.fromARGB(1000, 221, 46, 68), type: SpinKitWaveType.start),
+      child: SpinKitWave(color: Colors.black, type: SpinKitWaveType.start),
     ));
   }
 }

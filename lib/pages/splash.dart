@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lifeshare/pages/tabs.dart';
 import 'dart:async';
 //pages import
 import './auth.dart';
-import './home.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -44,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
       child: Container(
         height: _logoAnimation.value*250.0,
         width: _logoAnimation.value*250.0,
-        child: Image.asset("assets/logo.png"),
+        child: Image.asset("assets/login.png"),
       ),
     );
   }
@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
         context,
         MaterialPageRoute(
             builder: (context) =>
-                currentUser == null ? AuthPage(appAuth) : HomePage()));
+                currentUser == null ? AuthPage(appAuth) : Tabs()));
   }
 
   startTime() async {
@@ -66,6 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
           body:  _buildLogo(),
     );
   }
